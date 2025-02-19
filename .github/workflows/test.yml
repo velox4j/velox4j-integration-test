@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Tests
         run: |
-          docker run -v ${{ github.workspace }}:/work -w /work ${{ matrix.os }} bash -c "
+          docker run -v ${{ github.workspace }}:/work -w /work ${{ matrix.image }} bash -c "
             wget https://builds.openlogic.com/downloadJDK/openlogic-openjdk/11.0.26+4/openlogic-openjdk-11.0.26+4-linux-x64.tar.gz -O openjdk-11.tar.gz
             mkdir openjdk-11
             tar -xvf openjdk-11.tar.gz --strip-components 1 -C openjdk-11
