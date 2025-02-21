@@ -1,4 +1,4 @@
-package io.github.zhztheplayer.velox4j.tests;
+package io.github.zhztheplayer.velox4j.test;
 
 import com.google.common.base.Preconditions;
 import io.github.zhztheplayer.velox4j.jni.JniWorkspace;

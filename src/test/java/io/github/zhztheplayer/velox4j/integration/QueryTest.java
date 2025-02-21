@@ -35,7 +35,7 @@ import io.github.zhztheplayer.velox4j.plan.TableScanNode;
 import io.github.zhztheplayer.velox4j.query.BoundSplit;
 import io.github.zhztheplayer.velox4j.query.Query;
 import io.github.zhztheplayer.velox4j.session.Session;
-import io.github.zhztheplayer.velox4j.tests.ResourceTests;
+import io.github.zhztheplayer.velox4j.test.ResourceTests;
 import io.github.zhztheplayer.velox4j.type.BigIntType;
 import io.github.zhztheplayer.velox4j.type.RowType;
 import io.github.zhztheplayer.velox4j.type.Type;
