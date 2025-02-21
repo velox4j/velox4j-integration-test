@@ -18,6 +18,7 @@
 package io.github.zhztheplayer.velox4j.integration;
 
 import io.github.zhztheplayer.velox4j.Velox4j;
+import io.github.zhztheplayer.velox4j.arrow.Arrow;
 import io.github.zhztheplayer.velox4j.config.Config;
 import io.github.zhztheplayer.velox4j.config.ConnectorConfig;
 import io.github.zhztheplayer.velox4j.connector.Assignment;
@@ -127,7 +128,7 @@ public class QueryTest {
     int i = 0;
     while (itr.hasNext()) {
       final RowVector rowVector = itr.next(); // 8.1. Get next RowVector returned by Velox.
-      final VectorSchemaRoot vsr = session.arrowOps().toArrowTable(new RootAllocator(), rowVector).toVectorSchemaRoot(); // 8.2. Convert the RowVector into Arrow format (an Arrow VectorSchemaRoot in this case).
+      final VectorSchemaRoot vsr = Arrow.toArrowTable(new RootAllocator(), rowVector).toVectorSchemaRoot(); // 8.2. Convert the RowVector into Arrow format (an Arrow VectorSchemaRoot in this case).
       final String expectedOutput = ResourceTests.readResourceAsString(String.format("output/nation-%d.tsv", i++));
       Assert.assertEquals(expectedOutput, vsr.contentToTSVString()); // 8.3. Verify the result.
       vsr.close(); // 8.4. Release the Arrow VectorSchemaRoot.
