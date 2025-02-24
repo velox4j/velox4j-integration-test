@@ -7,7 +7,7 @@
   <groupId>io.github.zhztheplayer</groupId>
   <artifactId>velox4j-integration-test</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <description>Integration tests for Velox4j</description>
+  <description>Integration tests for Velox4J</description>
 
   <licenses>
     <license>

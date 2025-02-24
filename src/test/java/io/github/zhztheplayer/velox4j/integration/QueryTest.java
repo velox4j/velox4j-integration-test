@@ -56,7 +56,7 @@ public class QueryTest {
 
   @Test
   public void testScan() {
-    // 1. Initialize Velox4j.
+    // 1. Initialize Velox4J.
     Velox4j.initialize();
 
     // 2. Define the plan output schema.
@@ -117,7 +117,7 @@ public class QueryTest {
     // 5. Build the query.
     final Query query = new Query(scanNode, List.of(split), Config.empty(), ConnectorConfig.empty());
 
-    // 6. Create a Velox4j session.
+    // 6. Create a Velox4J session.
     final MemoryManager memoryManager = MemoryManager.create(AllocationListener.NOOP);
     final Session session = Velox4j.newSession(memoryManager);
 
@@ -134,7 +134,7 @@ public class QueryTest {
       vsr.close(); // 8.4. Release the Arrow VectorSchemaRoot.
     }
 
-    // 9. Close the Velox4j session.
+    // 9. Close the Velox4J session.
     session.close();
     memoryManager.close();
   }
