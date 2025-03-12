@@ -28,7 +28,7 @@ import io.github.zhztheplayer.velox4j.connector.HiveColumnHandle;
 import io.github.zhztheplayer.velox4j.connector.HiveConnectorSplit;
 import io.github.zhztheplayer.velox4j.connector.HiveTableHandle;
 import io.github.zhztheplayer.velox4j.data.RowVector;
-import io.github.zhztheplayer.velox4j.iterator.UpIterator;
+import io.github.zhztheplayer.velox4j.iterator.UpIterators;
 import io.github.zhztheplayer.velox4j.memory.AllocationListener;
 import io.github.zhztheplayer.velox4j.memory.MemoryManager;
 import io.github.zhztheplayer.velox4j.plan.TableScanNode;
@@ -46,11 +46,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
 
 public class QueryTest {
 
@@ -109,6 +105,7 @@ public class QueryTest {
             Optional.empty(),
             Map.of(),
             Map.of(),
+            Map.of(),
             Optional.empty(),
             Optional.empty()
         )
@@ -122,7 +119,7 @@ public class QueryTest {
     final Session session = Velox4j.newSession(memoryManager);
 
     // 7. Execute the query.
-    final UpIterator itr = session.queryOps().execute(query);
+    final Iterator<RowVector> itr = UpIterators.asJavaIterator(session.queryOps().execute(query));
 
     // 8. Collect and print results.
     int i = 0;
