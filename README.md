@@ -1,4 +1,4 @@
-# Integration-test ![badge](https://github.com/velox4j/velox4j-integration-test/actions/workflows/test.yml/badge.svg)
+# Integration-test ![badge](https://github.com/velox4j/velox4j-integration-test/actions/workflows/integration-test.yml/badge.svg)
 
 Integration tests for https://github.com/velox4j/velox4j.
 
