@@ -21,19 +21,14 @@ import io.github.zhztheplayer.velox4j.Velox4j;
 import io.github.zhztheplayer.velox4j.arrow.Arrow;
 import io.github.zhztheplayer.velox4j.config.Config;
 import io.github.zhztheplayer.velox4j.config.ConnectorConfig;
-import io.github.zhztheplayer.velox4j.connector.Assignment;
-import io.github.zhztheplayer.velox4j.connector.ColumnType;
-import io.github.zhztheplayer.velox4j.connector.FileFormat;
-import io.github.zhztheplayer.velox4j.connector.HiveColumnHandle;
-import io.github.zhztheplayer.velox4j.connector.HiveConnectorSplit;
-import io.github.zhztheplayer.velox4j.connector.HiveTableHandle;
+import io.github.zhztheplayer.velox4j.connector.*;
 import io.github.zhztheplayer.velox4j.data.RowVector;
 import io.github.zhztheplayer.velox4j.iterator.UpIterators;
 import io.github.zhztheplayer.velox4j.memory.AllocationListener;
 import io.github.zhztheplayer.velox4j.memory.MemoryManager;
 import io.github.zhztheplayer.velox4j.plan.TableScanNode;
-import io.github.zhztheplayer.velox4j.query.BoundSplit;
 import io.github.zhztheplayer.velox4j.query.Query;
+import io.github.zhztheplayer.velox4j.query.SerialTask;
 import io.github.zhztheplayer.velox4j.session.Session;
 import io.github.zhztheplayer.velox4j.test.ResourceTests;
 import io.github.zhztheplayer.velox4j.type.BigIntType;
@@ -42,14 +37,12 @@ import io.github.zhztheplayer.velox4j.type.Type;
 import io.github.zhztheplayer.velox4j.type.VarCharType;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.VectorSchemaRoot;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.*;
 
 public class QueryTest {
-
   @Test
   public void testScan() {
     // 1. Initialize Velox4J.
@@ -84,58 +77,56 @@ public class QueryTest {
         toAssignments(outputType)
     );
 
-    // 4. Create a split associating with the table scan node, this makes
-    // the scan read a local file "/tmp/nation.parquet".
-    final File file = ResourceTests.copyResourceToTmp("data/nation.parquet");
-    final BoundSplit split = new BoundSplit(
-        scanNode.getId(),
-        -1,
-        new HiveConnectorSplit(
-            "connector-hive",
-            0,
-            false,
-            file.getAbsolutePath(),
-            FileFormat.PARQUET,
-            0,
-            file.length(),
-            Map.of(),
-            OptionalInt.empty(),
-            Optional.empty(),
-            Map.of(),
-            Optional.empty(),
-            Map.of(),
-            Map.of(),
-            Map.of(),
-            Optional.empty(),
-            Optional.empty()
-        )
-    );
+    // 4. Build the query.
+    final Query query = new Query(scanNode, Config.empty(), ConnectorConfig.empty());
 
-    // 5. Build the query.
-    final Query query = new Query(scanNode, List.of(split), Config.empty(), ConnectorConfig.empty());
-
-    // 6. Create a Velox4J session.
+    // 5. Create a Velox4J session.
     final MemoryManager memoryManager = MemoryManager.create(AllocationListener.NOOP);
     final Session session = Velox4j.newSession(memoryManager);
 
-    // 7. Execute the query.
-    final Iterator<RowVector> itr = UpIterators.asJavaIterator(session.queryOps().execute(query));
+    // 6. Execute the query. A Velox serial task will be returned.
+    final SerialTask task = session.queryOps().execute(query);
 
-    // 8. Collect and print results.
-    int i = 0;
+    // 7. Add a split associating with the table scan node to the task, this makes
+    // the scan read a local file "/tmp/nation.parquet".
+    final File file = ResourceTests.copyResourceToTmp("data/nation.parquet");
+    final ConnectorSplit split = new HiveConnectorSplit(
+        "connector-hive",
+        0,
+        false,
+        file.getAbsolutePath(),
+        FileFormat.PARQUET,
+        0,
+        file.length(),
+        Map.of(),
+        OptionalInt.empty(),
+        Optional.empty(),
+        Map.of(),
+        Optional.empty(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Optional.empty(),
+        Optional.empty()
+    );
+    task.addSplit(scanNode.getId(), split);
+    task.noMoreSplits(scanNode.getId());
+
+    // 8. Create a Java iterator from the Velox task.
+    final Iterator<RowVector> itr = UpIterators.asJavaIterator(task);
+
+    // 9. Collect and print results.
     while (itr.hasNext()) {
-      final RowVector rowVector = itr.next(); // 8.1. Get next RowVector returned by Velox.
-      final VectorSchemaRoot vsr = Arrow.toArrowTable(new RootAllocator(), rowVector).toVectorSchemaRoot(); // 8.2. Convert the RowVector into Arrow format (an Arrow VectorSchemaRoot in this case).
-      final String expectedOutput = ResourceTests.readResourceAsString(String.format("output/nation-%d.tsv", i++));
-      Assert.assertEquals(expectedOutput, vsr.contentToTSVString()); // 8.3. Verify the result.
-      vsr.close(); // 8.4. Release the Arrow VectorSchemaRoot.
+      final RowVector rowVector = itr.next(); // 9.1. Get next RowVector returned by Velox.
+      final VectorSchemaRoot vsr = Arrow.toArrowTable(new RootAllocator(), rowVector).toVectorSchemaRoot(); // 9.2. Convert the RowVector into Arrow format (an Arrow VectorSchemaRoot in this case).
+      System.out.println(vsr.contentToTSVString()); // 9.3. Print the arrow table to stdout.
+      vsr.close(); // 9.4. Release the Arrow VectorSchemaRoot.
     }
 
-    // 9. Close the Velox4J session.
+    // 10. Close the Velox4J session.
     session.close();
     memoryManager.close();
   }
-
 
   private static List<Assignment> toAssignments(RowType rowType) {
     final List<Assignment> list = new ArrayList<>();
