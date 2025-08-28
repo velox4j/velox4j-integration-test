@@ -1,6 +1,5 @@
 package io.github.zhztheplayer.velox4j.test;
 
-import com.google.common.base.Preconditions;
 import io.github.zhztheplayer.velox4j.jni.JniWorkspace;
 import io.github.zhztheplayer.velox4j.resource.Resources;
 
@@ -17,7 +16,9 @@ public final class ResourceTests {
   public static String readResourceAsString(String path) {
     final ClassLoader classloader = Thread.currentThread().getContextClassLoader();
     try (final InputStream is = classloader.getResourceAsStream(path)) {
-      Preconditions.checkArgument(is != null, "Resource %s not found", path);
+      if (is == null) {
+        throw new RuntimeException(String.format("Resource %s not found", path));
+      }
       final ByteArrayOutputStream o = new ByteArrayOutputStream();
       while (true) {
         int b = is.read();
